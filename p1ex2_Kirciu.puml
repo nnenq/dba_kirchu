@@ -1,0 +1,55 @@
+@startuml
+left to right direction
+
+title UseCase-диаграмма: Система управления хостелом
+
+actor "Гость" as Guest
+actor "Администратор" as Admin
+actor "Менеджер" as Manager
+actor "Горничная" as Maid
+
+rectangle "Система управления хостелом" {
+
+  usecase (просматривает доступные номера) as ViewRooms
+  usecase (бронирует номер) as BookRoom
+  usecase (отменяет бронирование) as CancelBooking
+  usecase (производит оплату) as MakePayment
+  usecase (оставляет отзыв) as LeaveReview
+
+  usecase (регистрирует гостя) as CheckIn
+  usecase (выселяет гостя) as CheckOut
+  usecase (управляет номерами) as ManageRooms
+  usecase (управляет бронированиями) as ManageBookings
+
+  usecase (создаёт отчёты) as CreateReports
+  usecase (изучает отчёты) as ReadReports
+
+  usecase (управляет персоналом) as ManageStaff
+  usecase (устанавливает цены) as SetPrices
+
+  usecase (убирает номер) as CleanRoom
+  usecase (отмечает номер готовым) as MarkReady
+}
+
+Guest --> ViewRooms
+Guest --> BookRoom
+Guest --> CancelBooking
+Guest --> MakePayment
+Guest --> LeaveReview
+
+Admin --> CheckIn
+Admin --> CheckOut
+Admin --> ManageRooms
+Admin --> ManageBookings
+Admin --> ReadReports
+
+Manager --> CreateReports
+Manager --> ReadReports
+Manager --> ManageStaff
+Manager --> SetPrices
+Manager --> ManageBookings
+
+Maid --> CleanRoom
+Maid --> MarkReady
+
+@enduml
