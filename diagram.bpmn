@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_hostel" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.12.0">
+  <collaboration id="Collaboration_1">
+    <participant id="Pool_Guest" name="Гость" processRef="Process_Guest" />
+    <participant id="Pool_Hostel" name="Хостел (Администратор)" processRef="Process_Hostel" />
+    <participant id="Pool_Housekeeping" name="Служба уборки" processRef="Process_Housekeeping" />
+    <messageFlow id="MF1" sourceRef="Task_SendRequest" targetRef="Task_ReceiveRequest" />
+    <messageFlow id="MF2" sourceRef="Task_SendConfirmation" targetRef="Task_ReceiveConfirmation" />
+    <messageFlow id="MF3" sourceRef="Task_SendInvoice" targetRef="Task_ReceiveInvoice" />
+    <messageFlow id="MF4" sourceRef="Task_NotifyHousekeeping" targetRef="Task_StartCleaning" />
+    <messageFlow id="MF5" sourceRef="Task_CheckoutNotify" targetRef="Task_ReceiveCheckout" />
+  </collaboration>
+  <process id="Process_Guest" isExecutable="false">
+    <startEvent id="SE_Guest" name="Желание&#10;забронировать">
+      <outgoing>SF_G1</outgoing>
+    </startEvent>
+    <task id="Task_SendRequest" name="Отправить запрос&#10;на бронирование">
+      <incoming>SF_G1</incoming>
+      <outgoing>SF_G2</outgoing>
+    </task>
+    <task id="Task_ReceiveConfirmation" name="Получить&#10;подтверждение">
+      <incoming>SF_G2</incoming>
+      <outgoing>SF_G3</outgoing>
+    </task>
+    <exclusiveGateway id="GW_Confirmed" name="Бронь&#10;подтверждена?">
+      <incoming>SF_G3</incoming>
+      <outgoing>SF_G4_yes</outgoing>
+      <outgoing>SF_G4_no</outgoing>
+    </exclusiveGateway>
+    <task id="Task_PayOnline" name="Оплатить&#10;(онлайн / при заезде)">
+      <incoming>SF_G4_yes</incoming>
+      <outgoing>SF_G5</outgoing>
+    </task>
+    <task id="Task_ReceiveInvoice" name="Получить&#10;квитанцию">
+      <incoming>SF_G5</incoming>
+      <outgoing>SF_G6</outgoing>
+    </task>
+    <task id="Task_Checkin" name="Заезд:&#10;получить ключ / карту">
+      <incoming>SF_G6</incoming>
+      <outgoing>SF_G7</outgoing>
+    </task>
+    <task id="Task_StayInRoom" name="Проживание&#10;в хостеле">
+      <incoming>SF_G7</incoming>
+      <outgoing>SF_G8</outgoing>
+    </task>
+    <task id="Task_CheckoutGuest" name="Выезд:&#10;сдать ключ">
+      <incoming>SF_G8</incoming>
+      <outgoing>SF_G9</outgoing>
+    </task>
+    <task id="Task_LeaveReview" name="Оставить&#10;отзыв">
+      <incoming>SF_G9</incoming>
+      <outgoing>SF_G10</outgoing>
+    </task>
+    <endEvent id="EE_GuestEnd" name="Завершение&#10;визита">
+      <incoming>SF_G10</incoming>
+    </endEvent>
+    <endEvent id="EE_GuestCancel" name="Бронь&#10;отменена">
+      <incoming>SF_G4_no</incoming>
+    </endEvent>
+    <sequenceFlow id="SF_G1" sourceRef="SE_Guest" targetRef="Task_SendRequest" />
+    <sequenceFlow id="SF_G2" sourceRef="Task_SendRequest" targetRef="Task_ReceiveConfirmation" />
+    <sequenceFlow id="SF_G3" sourceRef="Task_ReceiveConfirmation" targetRef="GW_Confirmed" />
+    <sequenceFlow id="SF_G4_yes" name="Да" sourceRef="GW_Confirmed" targetRef="Task_PayOnline" />
+    <sequenceFlow id="SF_G4_no" name="Нет" sourceRef="GW_Confirmed" targetRef="EE_GuestCancel" />
+    <sequenceFlow id="SF_G5" sourceRef="Task_PayOnline" targetRef="Task_ReceiveInvoice" />
+    <sequenceFlow id="SF_G6" sourceRef="Task_ReceiveInvoice" targetRef="Task_Checkin" />
+    <sequenceFlow id="SF_G7" sourceRef="Task_Checkin" targetRef="Task_StayInRoom" />
+    <sequenceFlow id="SF_G8" sourceRef="Task_StayInRoom" targetRef="Task_CheckoutGuest" />
+    <sequenceFlow id="SF_G9" sourceRef="Task_CheckoutGuest" targetRef="Task_LeaveReview" />
+    <sequenceFlow id="SF_G10" sourceRef="Task_LeaveReview" targetRef="EE_GuestEnd" />
+  </process>
+  <process id="Process_Hostel" isExecutable="false">
+    <startEvent id="SE_Hostel" name="Получить&#10;запрос">
+      <outgoing>SF_H1</outgoing>
+    </startEvent>
+    <task id="Task_ReceiveRequest" name="Принять запрос&#10;на бронирование">
+      <incoming>SF_H1</incoming>
+      <outgoing>SF_H2</outgoing>
+    </task>
+    <task id="Task_CheckAvailability" name="Проверить&#10;наличие мест">
+      <incoming>SF_H2</incoming>
+      <outgoing>SF_H3</outgoing>
+    </task>
+    <exclusiveGateway id="GW_Available" name="Есть&#10;свободные места?">
+      <incoming>SF_H3</incoming>
+      <outgoing>SF_H4_yes</outgoing>
+      <outgoing>SF_H4_no</outgoing>
+    </exclusiveGateway>
+    <task id="Task_CreateBooking" name="Создать бронирование&#10;в системе">
+      <incoming>SF_H4_yes</incoming>
+      <outgoing>SF_H5</outgoing>
+    </task>
+    <task id="Task_SendConfirmation" name="Отправить&#10;подтверждение гостю">
+      <incoming>SF_H5</incoming>
+      <outgoing>SF_H6</outgoing>
+    </task>
+    <task id="Task_ProcessPayment" name="Обработать&#10;оплату">
+      <incoming>SF_H6</incoming>
+      <outgoing>SF_H7</outgoing>
+    </task>
+    <task id="Task_SendInvoice" name="Выдать квитанцию /&#10;счёт-фактуру">
+      <incoming>SF_H7</incoming>
+      <outgoing>SF_H8</outgoing>
+    </task>
+    <task id="Task_AssignRoom" name="Назначить&#10;номер / кровать">
+      <incoming>SF_H8</incoming>
+      <outgoing>SF_H9</outgoing>
+    </task>
+    <task id="Task_IssueKey" name="Выдать ключ /&#10;карту доступа">
+      <incoming>SF_H9</incoming>
+      <outgoing>SF_H10</outgoing>
+    </task>
+    <task id="Task_CheckoutNotify" name="Принять ключ,&#10;зафиксировать выезд">
+      <incoming>SF_H10</incoming>
+      <outgoing>SF_H11</outgoing>
+    </task>
+    <task id="Task_NotifyHousekeeping" name="Уведомить службу&#10;уборки">
+      <incoming>SF_H11</incoming>
+      <outgoing>SF_H12</outgoing>
+    </task>
+    <task id="Task_UpdateSystem" name="Обновить статус&#10;номера в системе">
+      <incoming>SF_H12</incoming>
+      <outgoing>SF_H13</outgoing>
+    </task>
+    <endEvent id="EE_HostelEnd" name="Бронирование&#10;закрыто">
+      <incoming>SF_H13</incoming>
+    </endEvent>
+    <task id="Task_SendRefusal" name="Отправить отказ /&#10;предложить альтернативу">
+      <incoming>SF_H4_no</incoming>
+      <outgoing>SF_H_ref</outgoing>
+    </task>
+    <endEvent id="EE_HostelRefuse" name="Отказ&#10;отправлен">
+      <incoming>SF_H_ref</incoming>
+    </endEvent>
+    <sequenceFlow id="SF_H1" sourceRef="SE_Hostel" targetRef="Task_ReceiveRequest" />
+    <sequenceFlow id="SF_H2" sourceRef="Task_ReceiveRequest" targetRef="Task_CheckAvailability" />
+    <sequenceFlow id="SF_H3" sourceRef="Task_CheckAvailability" targetRef="GW_Available" />
+    <sequenceFlow id="SF_H4_yes" name="Да" sourceRef="GW_Available" targetRef="Task_CreateBooking" />
+    <sequenceFlow id="SF_H4_no" name="Нет" sourceRef="GW_Available" targetRef="Task_SendRefusal" />
+    <sequenceFlow id="SF_H5" sourceRef="Task_CreateBooking" targetRef="Task_SendConfirmation" />
+    <sequenceFlow id="SF_H6" sourceRef="Task_SendConfirmation" targetRef="Task_ProcessPayment" />
+    <sequenceFlow id="SF_H7" sourceRef="Task_ProcessPayment" targetRef="Task_SendInvoice" />
+    <sequenceFlow id="SF_H8" sourceRef="Task_SendInvoice" targetRef="Task_AssignRoom" />
+    <sequenceFlow id="SF_H9" sourceRef="Task_AssignRoom" targetRef="Task_IssueKey" />
+    <sequenceFlow id="SF_H10" sourceRef="Task_IssueKey" targetRef="Task_CheckoutNotify" />
+    <sequenceFlow id="SF_H11" sourceRef="Task_CheckoutNotify" targetRef="Task_NotifyHousekeeping" />
+    <sequenceFlow id="SF_H12" sourceRef="Task_NotifyHousekeeping" targetRef="Task_UpdateSystem" />
+    <sequenceFlow id="SF_H13" sourceRef="Task_UpdateSystem" targetRef="EE_HostelEnd" />
+    <sequenceFlow id="SF_H_ref" sourceRef="Task_SendRefusal" targetRef="EE_HostelRefuse" />
+  </process>
+  <process id="Process_Housekeeping" isExecutable="false">
+    <startEvent id="SE_HK" name="Уведомление&#10;о выезде">
+      <outgoing>SF_HK1</outgoing>
+    </startEvent>
+    <task id="Task_StartCleaning" name="Получить задание&#10;на уборку">
+      <incoming>SF_HK1</incoming>
+      <outgoing>SF_HK2</outgoing>
+    </task>
+    <task id="Task_ReceiveCheckout" name="Произвести&#10;уборку номера">
+      <incoming>SF_HK2</incoming>
+      <outgoing>SF_HK3</outgoing>
+    </task>
+    <task id="Task_CheckRoom" name="Проверить наличие&#10;имущества / повреждений">
+      <incoming>SF_HK3</incoming>
+      <outgoing>SF_HK4</outgoing>
+    </task>
+    <task id="Task_ReportReady" name="Отметить номер&#10;как готовый">
+      <incoming>SF_HK4</incoming>
+      <outgoing>SF_HK5</outgoing>
+    </task>
+    <endEvent id="EE_HK_End" name="Номер готов&#10;к заселению">
+      <incoming>SF_HK5</incoming>
+    </endEvent>
+    <sequenceFlow id="SF_HK1" sourceRef="SE_HK" targetRef="Task_StartCleaning" />
+    <sequenceFlow id="SF_HK2" sourceRef="Task_StartCleaning" targetRef="Task_ReceiveCheckout" />
+    <sequenceFlow id="SF_HK3" sourceRef="Task_ReceiveCheckout" targetRef="Task_CheckRoom" />
+    <sequenceFlow id="SF_HK4" sourceRef="Task_CheckRoom" targetRef="Task_ReportReady" />
+    <sequenceFlow id="SF_HK5" sourceRef="Task_ReportReady" targetRef="EE_HK_End" />
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Shape_Pool_Hostel" bpmnElement="Pool_Hostel" isHorizontal="true">
+        <dc:Bounds x="150" y="340" width="1570" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_SE_Hostel" bpmnElement="SE_Hostel">
+        <dc:Bounds x="202" y="422" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="196" y="458" width="49" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReceiveRequest" bpmnElement="Task_ReceiveRequest">
+        <dc:Bounds x="280" y="400" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CheckAvailability" bpmnElement="Task_CheckAvailability">
+        <dc:Bounds x="430" y="400" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_GW_Available" bpmnElement="GW_Available" isMarkerVisible="true">
+        <dc:Bounds x="580" y="415" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="576" y="365" width="57" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CreateBooking" bpmnElement="Task_CreateBooking">
+        <dc:Bounds x="670" y="400" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SendConfirmation" bpmnElement="Task_SendConfirmation">
+        <dc:Bounds x="820" y="400" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ProcessPayment" bpmnElement="Task_ProcessPayment">
+        <dc:Bounds x="970" y="400" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SendInvoice" bpmnElement="Task_SendInvoice">
+        <dc:Bounds x="1120" y="400" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_AssignRoom" bpmnElement="Task_AssignRoom">
+        <dc:Bounds x="1270" y="400" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_IssueKey" bpmnElement="Task_IssueKey">
+        <dc:Bounds x="1420" y="400" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CheckoutNotify" bpmnElement="Task_CheckoutNotify">
+        <dc:Bounds x="1420" y="505" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_NotifyHousekeeping" bpmnElement="Task_NotifyHousekeeping">
+        <dc:Bounds x="1270" y="505" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_UpdateSystem" bpmnElement="Task_UpdateSystem">
+        <dc:Bounds x="1120" y="505" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EE_HostelEnd" bpmnElement="EE_HostelEnd">
+        <dc:Bounds x="1072" y="527" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1053" y="563" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SendRefusal" bpmnElement="Task_SendRefusal">
+        <dc:Bounds x="635" y="520" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EE_HostelRefuse" bpmnElement="EE_HostelRefuse">
+        <dc:Bounds x="842" y="542" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="833" y="578" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_SF_H1" bpmnElement="SF_H1">
+        <di:waypoint x="238" y="440" />
+        <di:waypoint x="280" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H2" bpmnElement="SF_H2">
+        <di:waypoint x="390" y="440" />
+        <di:waypoint x="430" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H3" bpmnElement="SF_H3">
+        <di:waypoint x="540" y="440" />
+        <di:waypoint x="580" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H4_yes" bpmnElement="SF_H4_yes">
+        <di:waypoint x="630" y="440" />
+        <di:waypoint x="670" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="644" y="415" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H4_no" bpmnElement="SF_H4_no">
+        <di:waypoint x="605" y="465" />
+        <di:waypoint x="605" y="560" />
+        <di:waypoint x="635" y="560" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="610" y="502" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H5" bpmnElement="SF_H5">
+        <di:waypoint x="780" y="440" />
+        <di:waypoint x="820" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H6" bpmnElement="SF_H6">
+        <di:waypoint x="930" y="440" />
+        <di:waypoint x="970" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H7" bpmnElement="SF_H7">
+        <di:waypoint x="1080" y="440" />
+        <di:waypoint x="1120" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H8" bpmnElement="SF_H8">
+        <di:waypoint x="1230" y="440" />
+        <di:waypoint x="1270" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H9" bpmnElement="SF_H9">
+        <di:waypoint x="1380" y="440" />
+        <di:waypoint x="1420" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H10" bpmnElement="SF_H10">
+        <di:waypoint x="1475" y="480" />
+        <di:waypoint x="1475" y="505" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H11" bpmnElement="SF_H11">
+        <di:waypoint x="1420" y="545" />
+        <di:waypoint x="1380" y="545" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H12" bpmnElement="SF_H12">
+        <di:waypoint x="1270" y="545" />
+        <di:waypoint x="1230" y="545" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H13" bpmnElement="SF_H13">
+        <di:waypoint x="1120" y="545" />
+        <di:waypoint x="1108" y="545" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_H_ref" bpmnElement="SF_H_ref">
+        <di:waypoint x="700" y="520" />
+        <di:waypoint x="700" y="490" />
+        <di:waypoint x="860" y="490" />
+        <di:waypoint x="860" y="542" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Shape_Pool_Guest" bpmnElement="Pool_Guest" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="1570" height="210" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_SE_Guest" bpmnElement="SE_Guest">
+        <dc:Bounds x="202" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="182" y="233" width="77" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SendRequest" bpmnElement="Task_SendRequest">
+        <dc:Bounds x="280" y="170" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReceiveConfirmation" bpmnElement="Task_ReceiveConfirmation">
+        <dc:Bounds x="440" y="170" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_GW_Confirmed" bpmnElement="GW_Confirmed" isMarkerVisible="true">
+        <dc:Bounds x="600" y="185" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="585" y="240" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PayOnline" bpmnElement="Task_PayOnline">
+        <dc:Bounds x="690" y="170" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReceiveInvoice" bpmnElement="Task_ReceiveInvoice">
+        <dc:Bounds x="850" y="170" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_Checkin" bpmnElement="Task_Checkin">
+        <dc:Bounds x="1010" y="170" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_StayInRoom" bpmnElement="Task_StayInRoom">
+        <dc:Bounds x="1170" y="170" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CheckoutGuest" bpmnElement="Task_CheckoutGuest">
+        <dc:Bounds x="1330" y="170" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_LeaveReview" bpmnElement="Task_LeaveReview">
+        <dc:Bounds x="1490" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EE_GuestEnd" bpmnElement="EE_GuestEnd">
+        <dc:Bounds x="1622" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1608" y="228" width="64" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EE_GuestCancel" bpmnElement="EE_GuestCancel">
+        <dc:Bounds x="607" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="600" y="96" width="49" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_SF_G1" bpmnElement="SF_G1">
+        <di:waypoint x="238" y="210" />
+        <di:waypoint x="280" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G2" bpmnElement="SF_G2">
+        <di:waypoint x="400" y="210" />
+        <di:waypoint x="440" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G3" bpmnElement="SF_G3">
+        <di:waypoint x="560" y="210" />
+        <di:waypoint x="600" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G4_yes" bpmnElement="SF_G4_yes">
+        <di:waypoint x="650" y="210" />
+        <di:waypoint x="690" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="664" y="185" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G4_no" bpmnElement="SF_G4_no">
+        <di:waypoint x="625" y="185" />
+        <di:waypoint x="625" y="158" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="640" y="175" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G5" bpmnElement="SF_G5">
+        <di:waypoint x="810" y="210" />
+        <di:waypoint x="850" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G6" bpmnElement="SF_G6">
+        <di:waypoint x="970" y="210" />
+        <di:waypoint x="1010" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G7" bpmnElement="SF_G7">
+        <di:waypoint x="1130" y="210" />
+        <di:waypoint x="1170" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G8" bpmnElement="SF_G8">
+        <di:waypoint x="1290" y="210" />
+        <di:waypoint x="1330" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G9" bpmnElement="SF_G9">
+        <di:waypoint x="1450" y="210" />
+        <di:waypoint x="1490" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_G10" bpmnElement="SF_G10">
+        <di:waypoint x="1590" y="210" />
+        <di:waypoint x="1622" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Shape_Pool_HK" bpmnElement="Pool_Housekeeping" isHorizontal="true">
+        <dc:Bounds x="150" y="640" width="1570" height="160" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_SE_HK" bpmnElement="SE_HK">
+        <dc:Bounds x="1202" y="702" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1186" y="738" width="68" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_StartCleaning" bpmnElement="Task_StartCleaning">
+        <dc:Bounds x="1280" y="680" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReceiveCheckout" bpmnElement="Task_ReceiveCheckout">
+        <dc:Bounds x="1440" y="680" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CheckRoom" bpmnElement="Task_CheckRoom">
+        <dc:Bounds x="1000" y="680" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReportReady" bpmnElement="Task_ReportReady">
+        <dc:Bounds x="840" y="680" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EE_HK_End" bpmnElement="EE_HK_End">
+        <dc:Bounds x="752" y="702" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="738" y="738" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_SF_HK1" bpmnElement="SF_HK1">
+        <di:waypoint x="1238" y="720" />
+        <di:waypoint x="1280" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_HK2" bpmnElement="SF_HK2">
+        <di:waypoint x="1400" y="720" />
+        <di:waypoint x="1440" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_HK3" bpmnElement="SF_HK3">
+        <di:waypoint x="1440" y="720" />
+        <di:waypoint x="1120" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_HK4" bpmnElement="SF_HK4">
+        <di:waypoint x="1000" y="720" />
+        <di:waypoint x="960" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_SF_HK5" bpmnElement="SF_HK5">
+        <di:waypoint x="840" y="720" />
+        <di:waypoint x="788" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF1" bpmnElement="MF1">
+        <di:waypoint x="340" y="250" />
+        <di:waypoint x="340" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF2" bpmnElement="MF2">
+        <di:waypoint x="875" y="400" />
+        <di:waypoint x="875" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF3" bpmnElement="MF3">
+        <di:waypoint x="1175" y="400" />
+        <di:waypoint x="1175" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF4" bpmnElement="MF4">
+        <di:waypoint x="1325" y="590" />
+        <di:waypoint x="1325" y="680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF5" bpmnElement="MF5">
+        <di:waypoint x="1475" y="585" />
+        <di:waypoint x="1475" y="680" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
