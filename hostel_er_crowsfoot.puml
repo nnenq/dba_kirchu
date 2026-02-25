@@ -1,0 +1,139 @@
+@startuml hostel_er_crowsfoot
+
+' Crow's Foot (Information Engineering) notation
+!define TABLE(name) entity name
+skinparam linetype ortho
+hide circle
+hide methods
+
+skinparam entity {
+    BackgroundColor #1e2536
+    BorderColor #4a6fa5
+    HeaderBackgroundColor #2e3a5c
+    FontColor #a8c4f0
+    FontName "Courier New"
+    FontSize 12
+    ArrowColor #4a6fa5
+}
+skinparam defaultFontName "Courier New"
+skinparam defaultFontSize 11
+
+' ===== ENTITIES =====
+
+entity GUEST {
+    * guest_id : INT <<PK>>
+    --
+    last_name : VARCHAR(50)
+    first_name : VARCHAR(50)
+    birth_date : DATE
+    passport_series : CHAR(4)
+    passport_no : CHAR(6)
+    phone : VARCHAR(20)
+    email : VARCHAR(100)
+}
+
+entity BOOKING {
+    * booking_id : INT <<PK>>
+    --
+    # guest_id : INT <<FK>>
+    # room_id : INT <<FK>>
+    # staff_id : INT <<FK>>
+    created_at : DATETIME
+    check_in : DATE
+    check_out : DATE
+    status : VARCHAR(20)
+    total_amount : DECIMAL
+}
+
+entity ROOM {
+    * room_id : INT <<PK>>
+    --
+    # room_type_id : INT <<FK>>
+    room_number : VARCHAR(10)
+    floor : INT
+    capacity : INT
+    area_sqm : DECIMAL
+    status : VARCHAR(20)
+}
+
+entity ROOM_TYPE {
+    * room_type_id : INT <<PK>>
+    --
+    name : VARCHAR(50)
+    price_per_night : DECIMAL
+    category : VARCHAR(30)
+}
+
+entity BED {
+    * bed_id : INT <<PK>>
+    --
+    # room_id : INT <<FK>>
+    bed_type : VARCHAR(30)
+    spot_number : INT
+    status : VARCHAR(20)
+}
+
+entity STAFF {
+    * staff_id : INT <<PK>>
+    --
+    last_name : VARCHAR(50)
+    first_name : VARCHAR(50)
+    position : VARCHAR(50)
+    phone : VARCHAR(20)
+    hire_date : DATE
+}
+
+entity SERVICE {
+    * service_id : INT <<PK>>
+    --
+    name : VARCHAR(100)
+    description : TEXT
+    price : DECIMAL
+    category : VARCHAR(50)
+}
+
+entity SERVICE_ORDER {
+    * order_id : INT <<PK>>
+    --
+    # booking_id : INT <<FK>>
+    # service_id : INT <<FK>>
+    order_date : DATETIME
+    quantity : INT
+    total : DECIMAL
+}
+
+entity REVIEW {
+    * review_id : INT <<PK>>
+    --
+    # guest_id : INT <<FK>>
+    # room_id : INT <<FK>>
+    rating : INT
+    review_text : TEXT
+    review_date : DATETIME
+}
+
+entity CLEANING {
+    * cleaning_id : INT <<PK>>
+    --
+    # room_id : INT <<FK>>
+    # staff_id : INT <<FK>>
+    cleaning_date : DATETIME
+    type : VARCHAR(30)
+    status : VARCHAR(20)
+}
+
+' ===== RELATIONSHIPS (Crow's Foot) =====
+
+GUEST       ||--o{  BOOKING       : " "
+BOOKING     }o--||  ROOM          : " "
+ROOM_TYPE   ||--o{  ROOM          : " "
+ROOM        ||--o{  BED           : " "
+BOOKING     ||--o{  SERVICE_ORDER : " "
+SERVICE     ||--o{  SERVICE_ORDER : " "
+GUEST       ||--o{  REVIEW        : " "
+ROOM        ||--o{  REVIEW        : " "
+STAFF       ||--o{  CLEANING      : " "
+ROOM        ||--o{  CLEANING      : " "
+STAFF       ||--o{  BOOKING       : " "
+
+@enduml
