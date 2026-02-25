@@ -1,0 +1,47 @@
+
+CREATE TABLE guest (
+    guest_id        SERIAL          PRIMARY KEY,
+    last_name       VARCHAR(60)     NOT NULL,
+    first_name      VARCHAR(60)     NOT NULL,
+    phone           VARCHAR(20),
+    email           VARCHAR(100),
+    passport_no     VARCHAR(20)     NOT NULL UNIQUE
+);
+
+
+CREATE TABLE room (
+    room_id         SERIAL          PRIMARY KEY,
+    room_number     VARCHAR(10)     NOT NULL UNIQUE,
+    floor           SMALLINT        NOT NULL,
+    capacity        SMALLINT        NOT NULL,
+    price_per_night NUMERIC(8,2)    NOT NULL,
+    status          VARCHAR(20)     NOT NULL DEFAULT 'available'
+);
+
+
+CREATE TABLE booking (
+    booking_id      SERIAL          PRIMARY KEY,
+    guest_id        INTEGER         NOT NULL REFERENCES guest(guest_id),
+    room_id         INTEGER         NOT NULL REFERENCES room(room_id),
+    check_in        DATE            NOT NULL,
+    check_out       DATE            NOT NULL,
+    status          VARCHAR(20)     NOT NULL DEFAULT 'confirmed',
+    total_amount    NUMERIC(10,2)
+);
+
+
+CREATE TABLE service (
+    service_id      SERIAL          PRIMARY KEY,
+    name            VARCHAR(100)    NOT NULL,
+    price           NUMERIC(8,2)    NOT NULL,
+    category        VARCHAR(50)
+);
+
+
+CREATE TABLE service_order (
+    order_id        SERIAL          PRIMARY KEY,
+    booking_id      INTEGER         NOT NULL REFERENCES booking(booking_id),
+    service_id      INTEGER         NOT NULL REFERENCES service(service_id),
+    quantity        SMALLINT        NOT NULL DEFAULT 1,
+    total           NUMERIC(10,2)   NOT NULL
+);
