@@ -1,0 +1,155 @@
+@startuml hostel_logical_schema
+
+skinparam linetype ortho
+hide circle
+hide methods
+
+skinparam entity {
+    BackgroundColor #1e2536
+    BorderColor #4a6fa5
+    HeaderBackgroundColor #2e3a5c
+    FontColor #a8c4f0
+    FontName "Courier New"
+    FontSize 12
+    ArrowColor #4a6fa5
+}
+skinparam defaultFontName "Courier New"
+skinparam defaultFontSize 11
+
+' ===== ENTITIES =====
+
+entity GUEST {
+    * guest_id        : INT           <<PK>>
+    --
+      last_name       : VARCHAR(60)   NOT NULL
+      first_name      : VARCHAR(60)   NOT NULL
+      middle_name     : VARCHAR(60)
+      birth_date      : DATE          NOT NULL
+      passport_series : CHAR(4)       NOT NULL
+      passport_no     : CHAR(6)       NOT NULL
+      phone           : VARCHAR(20)
+      email           : VARCHAR(100)
+      created_at      : DATETIME      NOT NULL
+}
+
+entity BOOKING {
+    * booking_id      : INT           <<PK>>
+    --
+    # guest_id        : INT           <<FK>>  NOT NULL
+    # room_id         : INT           <<FK>>  NOT NULL
+    # staff_id        : INT           <<FK>>
+    --
+      created_at      : DATETIME      NOT NULL
+      check_in        : DATE          NOT NULL
+      check_out       : DATE          NOT NULL
+      adults_count    : SMALLINT      DEFAULT 1
+      status          : VARCHAR(20)   NOT NULL
+      payment_method  : VARCHAR(30)
+      is_paid         : BOOLEAN       DEFAULT FALSE
+      total_amount    : DECIMAL(10,2)
+}
+
+entity ROOM {
+    * room_id         : INT           <<PK>>
+    --
+    # room_type_id    : INT           <<FK>>  NOT NULL
+    --
+      room_number     : VARCHAR(10)   NOT NULL UNIQUE
+      floor           : SMALLINT      NOT NULL
+      capacity        : SMALLINT      NOT NULL
+      area_sqm        : DECIMAL(5,1)
+      status          : VARCHAR(20)   NOT NULL
+      description     : TEXT
+}
+
+entity ROOM_TYPE {
+    * room_type_id    : INT           <<PK>>
+    --
+      name            : VARCHAR(50)   NOT NULL
+      price_per_night : DECIMAL(8,2)  NOT NULL
+      category        : VARCHAR(30)
+      amenities       : TEXT
+}
+
+entity BED {
+    * bed_id          : INT           <<PK>>
+    --
+    # room_id         : INT           <<FK>>  NOT NULL
+    --
+      bed_type        : VARCHAR(30)   NOT NULL
+      spot_number     : SMALLINT      NOT NULL
+      status          : VARCHAR(20)   NOT NULL
+}
+
+entity STAFF {
+    * staff_id        : INT           <<PK>>
+    --
+      last_name       : VARCHAR(60)   NOT NULL
+      first_name      : VARCHAR(60)   NOT NULL
+      position        : VARCHAR(50)   NOT NULL
+      phone           : VARCHAR(20)
+      hire_date       : DATE          NOT NULL
+      is_active       : BOOLEAN       DEFAULT TRUE
+}
+
+entity SERVICE {
+    * service_id      : INT           <<PK>>
+    --
+      name            : VARCHAR(100)  NOT NULL
+      description     : TEXT
+      price           : DECIMAL(8,2)  NOT NULL
+      category        : VARCHAR(50)
+      is_active       : BOOLEAN       DEFAULT TRUE
+}
+
+entity SERVICE_ORDER {
+    * order_id        : INT           <<PK>>
+    --
+    # booking_id      : INT           <<FK>>  NOT NULL
+    # service_id      : INT           <<FK>>  NOT NULL
+    --
+      order_date      : DATETIME      NOT NULL
+      quantity        : SMALLINT      DEFAULT 1
+      unit_price      : DECIMAL(8,2)  NOT NULL
+      total           : DECIMAL(10,2) NOT NULL
+      status          : VARCHAR(20)   NOT NULL
+}
+
+entity REVIEW {
+    * review_id       : INT           <<PK>>
+    --
+    # guest_id        : INT           <<FK>>  NOT NULL
+    # room_id         : INT           <<FK>>  NOT NULL
+    --
+      rating          : SMALLINT      NOT NULL
+      review_text     : TEXT
+      review_date     : DATETIME      NOT NULL
+}
+
+entity CLEANING {
+    * cleaning_id     : INT           <<PK>>
+    --
+    # room_id         : INT           <<FK>>  NOT NULL
+    # staff_id        : INT           <<FK>>  NOT NULL
+    --
+      cleaning_date   : DATETIME      NOT NULL
+      cleaning_type   : VARCHAR(30)   NOT NULL
+      status          : VARCHAR(20)   NOT NULL
+      notes           : TEXT
+}
+
+' ===== RELATIONSHIPS (Crow's Foot) =====
+
+GUEST        ||--o{  BOOKING       : " "
+BOOKING      }o--||  ROOM          : " "
+ROOM_TYPE    ||--o{  ROOM          : " "
+ROOM         ||--o{  BED           : " "
+BOOKING      ||--o{  SERVICE_ORDER : " "
+SERVICE      ||--o{  SERVICE_ORDER : " "
+GUEST        ||--o{  REVIEW        : " "
+ROOM         ||--o{  REVIEW        : " "
+STAFF        ||--o{  CLEANING      : " "
+ROOM         ||--o{  CLEANING      : " "
+STAFF        ||--o{  BOOKING       : " "
+
+@enduml
